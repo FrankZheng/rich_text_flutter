@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -38,7 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void onTapWord(int index) async {
     String word = words[index];
     debugPrint('tap $word');
-    //only translate english word, and abbr, remove tailed symbols
+    //TODO: only translate english word, and abbr, remove tailed symbols
 
     //use api to get word's translation
     WordDefinition definition;
@@ -116,8 +117,29 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void onTapUKSound(WordDefinition definition) async {
+    playSound(definition.audioUkUrl);
+  }
+
+  void onTapUSSound(WordDefinition definition) async {
+    playSound(definition.audioUsUrl);
+  }
+
+  void playSound(String url) async {
+    if (url == null) {
+      return;
+    }
+    debugPrint('play sound, $url');
+    AudioPlayer audioPlayer = AudioPlayer(mode: PlayerMode.LOW_LATENCY);
+    AudioPlayer.logEnabled = true;
+    int result = await audioPlayer.play(url);
+    if (result != 1) {
+      debugPrint("Failed to play");
+    }
+  }
+
   List<Widget> definitionPanel() {
-    if (selectedWordIndex != null) {
+    if (selectedWordIndex != null && selectedWordIndex < words.length) {
       String word = words[selectedWordIndex];
       if (wordCache.containsKey(word)) {
         WordDefinition definition = wordCache[word];
@@ -136,7 +158,26 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               children: <Widget>[
                 Text('英 [${definition.pronUk}]'),
+                GestureDetector(
+                  onTap: () => this.onTapUKSound(definition),
+                  child: Icon(
+                    Icons.volume_up,
+                    size: 20,
+                    color: Colors.orange,
+                  ),
+                ),
+                SizedBox(
+                  width: 10,
+                ),
                 Text('美 [${definition.pronUs}]'),
+                GestureDetector(
+                  onTap: () => this.onTapUSSound(definition),
+                  child: Icon(
+                    Icons.volume_up,
+                    size: 20,
+                    color: Colors.orange,
+                  ),
+                ),
               ],
             ),
             definition.definitionCN != null
