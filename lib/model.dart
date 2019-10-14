@@ -4,13 +4,36 @@ class Word {
   String word;
   String postfix;
 
+  bool get hasPrefix => prefix != null && prefix.isNotEmpty;
+
+  bool get hasPostfix => postfix != null && postfix.isNotEmpty;
+
+  String toString() {
+    return 'raw:$rawWord,prefix:$prefix, word:$word, postfix:$postfix';
+  }
+
   Word(this.rawWord) {
     //split the rawWord to prefix, pure word, postfix.
     //1. pure word
     //2. word with some symbols
     // with [, . ? ! : ; "'()[]]
     // abbr, U.S. e.g.
-    word = rawWord;
+    List<String> patterns = [
+      r'([A-Za-z]\.)+',
+      r'\d+\w+',
+      r"\w+'\w*",
+      r'\w+(-\w+)*'
+    ];
+    String pattern = patterns.join('|');
+    RegExp re = new RegExp(pattern);
+    var match = re.firstMatch(rawWord);
+    if (match != null) {
+      prefix = rawWord.substring(0, match.start);
+      word = rawWord.substring(match.start, match.end);
+      postfix = rawWord.substring(match.end);
+    } else {
+      word = rawWord;
+    }
   }
 }
 
@@ -55,7 +78,7 @@ class WordCollection {
   Future<void> splitWords() async {
     //here may put the code into isolate to avoid block main thread
     //use string.split to split raw string to several words
-    RegExp re = new RegExp(r"\s+");
+    RegExp re = new RegExp(r"[ \f\r\t\v]");
     List<String> words = rawString.split(re);
     words.forEach((w) {
       Word word = new Word(w);
@@ -64,21 +87,33 @@ class WordCollection {
   }
 }
 
+class Paragraph extends WordCollection {
+  Paragraph(String rawString) : super(rawString);
+}
+
 class Article {
-  final WordCollection title;
-  final WordCollection body;
+  final String titleString;
+  final String bodyString;
 
-  List<Word> words;
+  WordCollection title;
+  List<Paragraph> body = [];
 
-  Article(this.title, this.body);
+  Article(this.titleString, this.bodyString);
 
   Future<void> splitWord() async {
+    title = new WordCollection(titleString);
     await title.splitWords();
-    await body.splitWords();
+    RegExp re = new RegExp(r"\n+");
+    List<String> paragraphStrs = bodyString.split(re);
+    paragraphStrs.forEach((p) async {
+      Paragraph paragraph = new Paragraph(p);
+      await paragraph.splitWords();
+      body.add(paragraph);
+    });
   }
 
   void clearSelection() {
     title.selectedWordIndex = null;
-    body.selectedWordIndex = null;
+    body.forEach((p) => p.selectedWordIndex = null);
   }
 }

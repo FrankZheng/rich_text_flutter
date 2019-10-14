@@ -33,9 +33,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void init() async {
     String str = await rootBundle.loadString('assets/article1.txt');
-    WordCollection title = new WordCollection("Warlrus joins in");
-    WordCollection body = new WordCollection(str);
-    Article article = new Article(title, body);
+    Article article = new Article("Warlrus joins in", str);
     await article.splitWord();
     setState(() {
       this.article = article;
@@ -72,9 +70,9 @@ class _MyHomePageState extends State<MyHomePage> {
         //selected
         //make the word a separate span
         span = new TextSpan(children: <TextSpan>[
-          if (word.prefix != null) TextSpan(text: word.prefix),
+          if (word.hasPrefix) TextSpan(text: word.prefix),
           TextSpan(text: word.word, style: selectedStyle),
-          if (word.postfix != null) TextSpan(text: word.postfix),
+          if (word.hasPostfix != null) TextSpan(text: word.postfix),
           TextSpan(text: ' '),
         ]);
       } else {
@@ -82,6 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
         TapGestureRecognizer recognizer = new TapGestureRecognizer();
         recognizer.onTap = () {
           this.onTapWord(word);
+          article.clearSelection();
           wordCollection.selectedWordIndex = i;
           //refresh UI to mark the selected word
           setState(() {
@@ -93,6 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
       spans.add(span);
     }
     return new RichText(
+      textAlign: TextAlign.justify,
       text: new TextSpan(children: spans, style: normalStyle),
     );
   }
@@ -101,27 +101,34 @@ class _MyHomePageState extends State<MyHomePage> {
     debugPrint('buildTitle');
     assert(article != null && article.title != null);
     TextStyle normalStyle =
-        new TextStyle(color: Colors.black, fontSize: 20, height: 1.2);
-    TextStyle selectedStyle =
-        new TextStyle(color: Colors.blue, fontSize: 20, height: 1.2);
+        new TextStyle(color: Colors.black, fontSize: 22, height: 1.2);
+    TextStyle selectedStyle = new TextStyle(color: Colors.yellow);
     return buildWordCollectionWidget(article.title, normalStyle, selectedStyle);
   }
 
-  Widget body() {
+  List<Widget> body() {
     debugPrint('buildBody');
     assert(article != null && article.body != null);
     TextStyle normalStyle =
-        new TextStyle(color: Colors.black, fontSize: 20, height: 1.5);
-    TextStyle selectedStyle = new TextStyle(
-        color: Colors.black,
-        backgroundColor: Colors.yellow,
-        fontSize: 20,
-        height: 1.5);
-    return buildWordCollectionWidget(article.body, normalStyle, selectedStyle);
+        new TextStyle(color: Colors.black, fontSize: 18, height: 1.5);
+    TextStyle selectedStyle = new TextStyle(backgroundColor: Colors.yellow);
+
+    List<Widget> widgets = [];
+    List<Paragraph> paragraphs = article.body;
+    for (int i = 0; i < paragraphs.length; i++) {
+      Paragraph p = paragraphs[i];
+      widgets.add(buildWordCollectionWidget(p, normalStyle, selectedStyle));
+      if (i != paragraphs.length - 1) {
+        widgets.add(new SizedBox(
+          height: 10,
+        ));
+      }
+    }
+    return widgets;
   }
 
   void onTapWord(Word word) {
-    debugPrint('tap word:${word.word}');
+    debugPrint('tap word:${word.toString()}');
   }
 
   @override
@@ -137,14 +144,18 @@ class _MyHomePageState extends State<MyHomePage> {
         children: <Widget>[
           Expanded(
             child: SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  title(),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  body(),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    title(),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    ...body(),
+                  ],
+                ),
               ),
             ),
           ),
