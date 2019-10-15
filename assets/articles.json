@@ -1,0 +1,29 @@
+{
+  "articles": [
+    {
+      "title": "7_01 Warlrus joins in",
+      "cover": "assets/7_01.jpg",
+      "body_url": "assets/Walrus_Joins_In.txt"
+    },
+    {
+      "title": "7_02 Noisy Neighbours",
+      "cover": "assets/7_02.jpg",
+      "body_url": "assets/Walrus_Joins_In.txt"
+    },
+    {
+      "title": "7_03 Princess Pip's Holiday",
+      "cover": "assets/7_03.jpg",
+      "body_url": "assets/Walrus_Joins_In.txt"
+    },
+    {
+      "title": "7_04 Oh Otto",
+      "cover": "assets/7_04.jpg",
+      "body_url": "assets/Walrus_Joins_In.txt"
+    },
+    {
+      "title": "7_05 Caption Comet and the Purple Planet",
+      "cover": "assets/7_05.jpg",
+      "body_url": "assets/Walrus_Joins_In.txt"
+    }
+  ]
+}
