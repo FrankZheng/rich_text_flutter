@@ -21,7 +21,7 @@ class Word {
     List<String> patterns = [
       r'([A-Za-z]\.)+',
       r'\d+\w+',
-      r"\w+'\w*",
+      r"\w+[’']\w*",
       r'\w+(-\w+)*'
     ];
     String pattern = patterns.join('|');
