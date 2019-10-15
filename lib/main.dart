@@ -2,6 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rich_text_flutter/model.dart';
+import 'package:dio/dio.dart';
+import 'package:rich_text_flutter/word_definition_view.dart';
 
 void main() => runApp(MyApp());
 
@@ -30,6 +32,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Article article;
+  Map<String, WordDefinition> wordCache = {};
 
   void init() async {
     String str = await rootBundle.loadString('assets/article1.txt');
@@ -127,8 +130,15 @@ class _MyHomePageState extends State<MyHomePage> {
     return widgets;
   }
 
-  void onTapWord(Word word) {
-    debugPrint('tap word:${word.toString()}');
+  void onTapWord(Word aWord) async {
+    debugPrint('tap word:${aWord.toString()}');
+    Future<void> ret = showModalBottomSheet<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return WordDefinitionView(aWord);
+        });
+    await ret;
+    debugPrint('closed');
   }
 
   @override

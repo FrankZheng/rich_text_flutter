@@ -117,3 +117,18 @@ class Article {
     body.forEach((p) => p.selectedWordIndex = null);
   }
 }
+
+class WordCache {
+  static final WordCache shared = new WordCache();
+  Map<String, WordDefinition> _map = {};
+
+  WordDefinition get(Word word) {
+    return _map[word.word];
+  }
+
+  void put(Word word, WordDefinition definition) {
+    _map[word.word] = definition;
+  }
+
+  bool contains(Word word) => _map.containsKey(word.word);
+}
