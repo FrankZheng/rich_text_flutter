@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+
 class Word {
   final String rawWord;
   String prefix;
@@ -92,17 +94,29 @@ class Paragraph extends WordCollection {
 }
 
 class Article {
-  final String titleString;
-  final String bodyString;
+  String titleString; //title
+  String bodyString; //body
+  String coverUrl; //cover
+  String bodyUrl;
 
   WordCollection title;
   List<Paragraph> body = [];
 
   Article(this.titleString, this.bodyString);
 
+  Article.fromMap(Map<String, dynamic> map) {
+    titleString = map['title'];
+    bodyUrl = map['body_url'];
+    coverUrl = map['cover'];
+  }
+
   Future<void> splitWord() async {
+    //title
     title = new WordCollection(titleString);
     await title.splitWords();
+
+    //body
+    bodyString = await rootBundle.loadString(bodyUrl);
     RegExp re = new RegExp(r"\n+");
     List<String> paragraphStrs = bodyString.split(re);
     paragraphStrs.forEach((p) async {
