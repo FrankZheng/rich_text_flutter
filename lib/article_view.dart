@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +17,16 @@ class ArticlePage extends StatefulWidget {
 
 class _ArticlePageState extends State<ArticlePage> {
   Article article;
+  String fontFamily = 'Georgia';
+
+  //font size
+  double titleFontMaxSize = 32;
+  double titleFontMinSize = 16;
+  double titleFontSize = 22;
+
+  double bodyFontMaxSize = 32;
+  double bodyFontMinSize = 12;
+  double bodyFontSize = 20;
 
   void init() async {
     await widget.article.splitWord();
@@ -26,7 +38,14 @@ class _ArticlePageState extends State<ArticlePage> {
   @override
   void initState() {
     init();
+    SystemChrome.setEnabledSystemUIOverlays([]);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setEnabledSystemUIOverlays(SystemUiOverlay.values);
+    super.dispose();
   }
 
   Widget buildWordCollectionWidget(WordCollection wordCollection,
@@ -72,8 +91,11 @@ class _ArticlePageState extends State<ArticlePage> {
   Widget title() {
     debugPrint('buildTitle');
     assert(article != null && article.title != null);
-    TextStyle normalStyle =
-        new TextStyle(color: Colors.black, fontSize: 22, height: 1.2);
+    TextStyle normalStyle = new TextStyle(
+        color: Colors.black,
+        fontSize: titleFontSize,
+        height: 1.2,
+        fontFamily: fontFamily);
     TextStyle selectedStyle = new TextStyle(color: Colors.yellow);
     return buildWordCollectionWidget(article.title, normalStyle, selectedStyle);
   }
@@ -81,8 +103,11 @@ class _ArticlePageState extends State<ArticlePage> {
   List<Widget> body() {
     debugPrint('buildBody');
     assert(article != null && article.body != null);
-    TextStyle normalStyle =
-        new TextStyle(color: Colors.black, fontSize: 18, height: 1.5);
+    TextStyle normalStyle = new TextStyle(
+        color: Colors.black,
+        fontSize: bodyFontSize,
+        height: 1.5,
+        fontFamily: fontFamily);
     TextStyle selectedStyle = new TextStyle(backgroundColor: Colors.yellow);
 
     List<Widget> widgets = [];
@@ -108,6 +133,76 @@ class _ArticlePageState extends State<ArticlePage> {
         });
     await ret;
     debugPrint('closed');
+  }
+
+  void onAdjustFont() {
+    String systemFont = DefaultTextStyle.of(context).style.fontFamily;
+    List<String> fontFamilies = [
+      'Arial',
+      'Arial Black',
+      'Arial Narrow',
+      'Bookman',
+      'Bookman Old Style',
+      'Century Gothic',
+      'Comic Sans MS',
+      'Console',
+      'Courier',
+      'Courier New',
+      'Georgia',
+      'Helvetica',
+      'Impact',
+      'Lucida Console',
+      'Lucida Sans Unicode',
+      'Palantino Linotype',
+      'Tahoma',
+      'Times New Roman',
+      'Trebuchet MS',
+      'Verdana'
+    ];
+    fontFamilies.remove(systemFont);
+    fontFamilies.insert(0, '$systemFont(system)');
+
+    showModalBottomSheet(
+        context: context,
+        builder: (buildContext) {
+          return Container(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: ListView(
+              children: fontFamilies
+                  .map((ff) => GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          setState(() => fontFamily = ff);
+                        },
+                        child: Padding(
+                          child: Text(
+                            ff,
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: fontFamily == ff
+                                    ? FontWeight.bold
+                                    : FontWeight.normal),
+                          ),
+                          padding: EdgeInsets.all(8.0),
+                        ),
+                      ))
+                  .toList(),
+            ),
+          );
+        });
+  }
+
+  void onAdjustFontSize(bool increase) {
+    setState(() {
+      if (increase) {
+        titleFontSize = min(titleFontSize + 2, titleFontMaxSize);
+        bodyFontSize = min(bodyFontSize + 2, bodyFontMaxSize);
+      } else {
+        titleFontSize = max(titleFontSize - 2, titleFontMinSize);
+        bodyFontSize = max(bodyFontSize - 2, bodyFontMinSize);
+      }
+      debugPrint('titleFontSize:$titleFontSize, bodyFontSize:$bodyFontSize');
+    });
   }
 
   @override
@@ -142,8 +237,47 @@ class _ArticlePageState extends State<ArticlePage> {
       );
     }
 
+    Color iconColor = Colors.black45;
+
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.navigate_before,
+            color: iconColor,
+            size: 36,
+          ),
+        ),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.font_download, color: iconColor),
+            onPressed: onAdjustFont,
+          ),
+          PopupMenuButton<bool>(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Icon(Icons.format_size, color: iconColor),
+            ),
+            onSelected: (value) {
+              onAdjustFontSize(value);
+            },
+            itemBuilder: (context) {
+              return <PopupMenuItem<bool>>[
+                PopupMenuItem<bool>(
+                  child: Text('increase'),
+                  value: true,
+                ),
+                PopupMenuItem<bool>(
+                  child: Text('decrease'),
+                  value: false,
+                ),
+              ];
+            },
+          )
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: content,
