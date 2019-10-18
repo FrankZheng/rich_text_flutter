@@ -87,6 +87,10 @@ class WordCollection {
       colletion.add(word);
     });
   }
+
+  void clearSelection() {
+    selectedWordIndex = null;
+  }
 }
 
 class Paragraph extends WordCollection {
@@ -127,8 +131,8 @@ class Article {
   }
 
   void clearSelection() {
-    title.selectedWordIndex = null;
-    body.forEach((p) => p.selectedWordIndex = null);
+    title.clearSelection();
+    body.forEach((p) => p.clearSelection());
   }
 }
 

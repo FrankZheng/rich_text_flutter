@@ -70,7 +70,7 @@ class _ArticlePageState extends State<ArticlePage> {
         //unselected, make the prefix+word+postfix+space as whole span
         TapGestureRecognizer recognizer = new TapGestureRecognizer();
         recognizer.onTap = () {
-          this.onTapWord(word);
+          this.onTapWord(word, wordCollection);
           article.clearSelection();
           wordCollection.selectedWordIndex = i;
           //refresh UI to mark the selected word
@@ -89,26 +89,28 @@ class _ArticlePageState extends State<ArticlePage> {
   }
 
   Widget title() {
-    debugPrint('buildTitle');
+    //debugPrint('buildTitle');
     assert(article != null && article.title != null);
     TextStyle normalStyle = new TextStyle(
         color: Colors.black,
         fontSize: titleFontSize,
         height: 1.2,
         fontFamily: fontFamily);
-    TextStyle selectedStyle = new TextStyle(color: Colors.yellow);
+    TextStyle selectedStyle =
+        new TextStyle(color: Colors.white, backgroundColor: Colors.yellow);
     return buildWordCollectionWidget(article.title, normalStyle, selectedStyle);
   }
 
   List<Widget> body() {
-    debugPrint('buildBody');
+    //debugPrint('buildBody');
     assert(article != null && article.body != null);
     TextStyle normalStyle = new TextStyle(
         color: Colors.black,
         fontSize: bodyFontSize,
         height: 1.5,
         fontFamily: fontFamily);
-    TextStyle selectedStyle = new TextStyle(backgroundColor: Colors.yellow);
+    TextStyle selectedStyle =
+        new TextStyle(backgroundColor: Colors.yellow, color: Colors.white);
 
     List<Widget> widgets = [];
     List<Paragraph> paragraphs = article.body;
@@ -124,15 +126,13 @@ class _ArticlePageState extends State<ArticlePage> {
     return widgets;
   }
 
-  void onTapWord(Word aWord) async {
+  void onTapWord(Word aWord, WordCollection wordCollection) async {
     debugPrint('tap word:${aWord.toString()}');
-    Future<void> ret = showModalBottomSheet<void>(
-        context: context,
-        builder: (BuildContext context) {
-          return WordDefinitionView(aWord);
-        });
-    await ret;
+    await WordDefinitionView.show(context, aWord);
     debugPrint('closed');
+    setState(() {
+      article.clearSelection();
+    });
   }
 
   void onAdjustFont() {

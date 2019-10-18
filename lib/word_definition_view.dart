@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'model.dart';
@@ -10,6 +12,19 @@ class WordDefinitionView extends StatefulWidget {
 
   @override
   _WordDefinitionView createState() => _WordDefinitionView();
+
+  static Future<void> show(BuildContext context, Word word) {
+    Future<void> ret = showModalBottomSheet<void>(
+        context: context,
+        shape: new RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12.0),
+                topRight: Radius.circular(12.0))),
+        builder: (BuildContext context) {
+          return WordDefinitionView(word);
+        });
+    return ret;
+  }
 }
 
 class _WordDefinitionView extends State<WordDefinitionView> {
@@ -83,7 +98,7 @@ class _WordDefinitionView extends State<WordDefinitionView> {
 
   @override
   Widget build(BuildContext context) {
-    final double viewHeight = 120;
+    final double viewHeight = 200;
     if (definition == null && error == null) {
       //loading
       return Container(
@@ -100,50 +115,140 @@ class _WordDefinitionView extends State<WordDefinitionView> {
       return Container(
           padding: EdgeInsets.all(8.0),
           height: viewHeight,
-          child: ListView(
+          child: Column(
             children: <Widget>[
-              Text('释义'),
-              Row(
-                children: <Widget>[
-                  Text(
-                    definition.translatedWord,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                ],
+              Container(
+                height: 24,
+                child: Stack(
+                  alignment: AlignmentDirectional.topCenter,
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    Text(
+                      '释义',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    Positioned(
+                        right: 0,
+                        child: GestureDetector(
+                          child: Icon(Icons.close),
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                        )),
+                  ],
+                ),
               ),
-              Row(
-                children: <Widget>[
-                  Text('英 [${definition.pronUk}]'),
-                  GestureDetector(
-                    onTap: () => this.onTapUKSound(definition),
-                    child: Icon(
-                      Icons.volume_up,
-                      size: 20,
-                      color: Colors.orange,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text('美 [${definition.pronUs}]'),
-                  GestureDetector(
-                    onTap: () => this.onTapUSSound(definition),
-                    child: Icon(
-                      Icons.volume_up,
-                      size: 20,
-                      color: Colors.orange,
-                    ),
-                  ),
-                ],
+              SizedBox(
+                height: 10,
               ),
-              definition.definitionCN != null
-                  ? Text(definition.definitionCN)
-                  : Text(
-                      '未找到',
-                      style: TextStyle(color: Colors.grey),
+              Expanded(
+                child: ListView(
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Text(
+                          definition.translatedWord,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                      ],
                     ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Text('英 [${definition.pronUk}]'),
+                        AnimatedVolumeIcon(
+                          size: 24,
+                          color: Colors.orange,
+                          onTap: () => this.onTapUKSound(definition),
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text('美 [${definition.pronUs}]'),
+                        AnimatedVolumeIcon(
+                          size: 24,
+                          color: Colors.orange,
+                          onTap: () => this.onTapUSSound(definition),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    definition.definitionCN != null
+                        ? Text(definition.definitionCN)
+                        : Text(
+                            '未找到',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                  ],
+                ),
+              ),
             ],
           ));
     }
+  }
+}
+
+class AnimatedVolumeIcon extends StatefulWidget {
+  final VoidCallback onTap;
+  final double size;
+  final Color color;
+  AnimatedVolumeIcon({this.size, this.color, this.onTap});
+
+  @override
+  _AnimatedVolumeIconState createState() => _AnimatedVolumeIconState();
+}
+
+class _AnimatedVolumeIconState extends State<AnimatedVolumeIcon> {
+  final List<IconData> icons = [
+    Icons.volume_mute,
+    Icons.volume_down,
+    Icons.volume_up
+  ];
+  int playCount = 0;
+  IconData icon = Icons.volume_up;
+  Timer timer;
+  void onTap() {
+    if (timer == null) {
+      widget.onTap();
+      //start to animate, for 2s?, and stop
+      final int dur = 400;
+      int maxCount = 1200 ~/ dur;
+      timer = Timer.periodic(Duration(milliseconds: dur), (t) {
+        //debugPrint('playCount:$playCount');
+        setState(() {
+          if (playCount < maxCount) {
+            icon = icons[playCount % icons.length];
+            playCount++;
+          } else {
+            playCount = 0;
+            timer.cancel();
+            timer = null;
+            icon = Icons.volume_up;
+          }
+        });
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    if (timer != null) {
+      timer.cancel();
+      timer = null;
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+        onTap: onTap,
+        child: Icon(icon, size: widget.size, color: widget.color));
   }
 }
